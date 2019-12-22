@@ -13,9 +13,9 @@
   <component name="ChangeListManager">
     <list default="true" id="a3a0be7b-be6a-43ff-999e-5f4815f3e4f7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/learn_c.dir/C.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/learn_c.dir/C.includecache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/learn_c.dir/main.c.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/learn_c.dir/main.c.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/learn_c" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/learn_c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main" beforeDir="false" afterPath="$PROJECT_DIR$/main" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -84,7 +84,7 @@
       <workItem from="1576887432898" duration="1968000" />
       <workItem from="1576938732596" duration="25175000" />
       <workItem from="1576971588205" duration="7851000" />
-      <workItem from="1577011926013" duration="10528000" />
+      <workItem from="1577011926013" duration="14413000" />
     </task>
     <servers />
   </component>
@@ -117,22 +117,22 @@
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
     <state x="2566" y="6" width="924" height="1044" key="DiffContextDialog/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1576964580925" />
-    <state width="1878" height="296" key="GridCell.Tab.0.bottom" timestamp="1577026036510">
+    <state width="1878" height="296" key="GridCell.Tab.0.bottom" timestamp="1577054679583">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
-    <state width="1878" height="296" key="GridCell.Tab.0.bottom/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577026036510" />
-    <state width="1878" height="296" key="GridCell.Tab.0.center" timestamp="1577026036510">
+    <state width="1878" height="296" key="GridCell.Tab.0.bottom/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577054679583" />
+    <state width="1878" height="296" key="GridCell.Tab.0.center" timestamp="1577054679583">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
-    <state width="1878" height="296" key="GridCell.Tab.0.center/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577026036510" />
-    <state width="1878" height="296" key="GridCell.Tab.0.left" timestamp="1577026036510">
+    <state width="1878" height="296" key="GridCell.Tab.0.center/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577054679583" />
+    <state width="1878" height="296" key="GridCell.Tab.0.left" timestamp="1577054679583">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
-    <state width="1878" height="296" key="GridCell.Tab.0.left/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577026036510" />
-    <state width="1878" height="296" key="GridCell.Tab.0.right" timestamp="1577026036510">
+    <state width="1878" height="296" key="GridCell.Tab.0.left/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577054679583" />
+    <state width="1878" height="296" key="GridCell.Tab.0.right" timestamp="1577054679583">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
-    <state width="1878" height="296" key="GridCell.Tab.0.right/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577026036510" />
+    <state width="1878" height="296" key="GridCell.Tab.0.right/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577054679583" />
     <state width="1878" height="368" key="GridCell.Tab.1.bottom" timestamp="1576966744501">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
@@ -157,10 +157,10 @@
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
     <state x="2566" y="6" width="924" height="1044" key="com.intellij.history.integration.ui.views.FileHistoryDialog/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1576949171737" />
-    <state x="2566" y="6" width="924" height="1044" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1576957556344">
+    <state x="2566" y="6" width="924" height="1044" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1577054677086">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
-    <state x="2566" y="6" width="924" height="1044" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1576957556344" />
+    <state x="2566" y="6" width="924" height="1044" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577054677086" />
     <state x="2251" y="303" key="com.intellij.ide.util.TipDialog" timestamp="1576360488936">
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
@@ -177,5 +177,9 @@
       <screen x="1600" y="0" width="1920" height="1080" />
     </state>
     <state x="2222" y="241" key="run.anything.popup/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577023739504" />
+    <state x="1755" y="236" width="672" height="678" key="search.everywhere.popup" timestamp="1577028618793">
+      <screen x="1600" y="0" width="1920" height="1080" />
+    </state>
+    <state x="1755" y="236" width="672" height="678" key="search.everywhere.popup/1600.0.1920.1080/0.0.1600.900@1600.0.1920.1080" timestamp="1577028618793" />
   </component>
 </project>

@@ -5,6 +5,14 @@
 #include <unistd.h>
 #include <wait.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define true 1
 #define false 0
@@ -13,13 +21,15 @@
 int process_status;
 int bufsize = BUFSIZE;
 
-int SPACE = ' ';
-int COLON = ':';
+const int SPACE = ' ';
+const int COLON = ':';
+const int SEMICOLON = ';';
+
 char** path_args;
 
 void print_prompt();
 void execute_args(char** args);
-char** split(char* input, int delim);
+char** split(char* input, const int delim);
 char* get_user_input(void);
 int main();
 void parse_path_args();
@@ -32,10 +42,8 @@ int main() {
         print_prompt();
         line = get_user_input();
         args = split(line, SPACE);
-        printf("Received %s\n", args[0]);
         pid_t pid = fork();
         if(pid == 0 && args[0]){
-            printf("Running exec on %s : %s\n", args[0], *args);
             execute_args(args);
         }
         waitpid(pid, &process_status, 0);
@@ -62,6 +70,7 @@ void print_prompt(){
 }
 
 void execute_args(char** args){
+    printf("Tog emot %s för exekvering\n", args[0]);
     if(strcmp(args[0], "cd") == 0){
         chdir(args[1]);
     } else {
@@ -83,28 +92,30 @@ char *get_user_input(void){
     }
 }
 
-char **split(char* input, int delim){
-    char **array = malloc(bufsize * sizeof(char*));
-    input[strlen(input)] = ' ';
-    char *delimptr = strchr(input, delim);
-    if(!delimptr){
-        array[0] = input;
-        array[1] = NULL;
-        free(delimptr);
-        return array;
-    }
+char *get_next_cmd(char* str){
     int i = 0;
-    int beginindex = 0;
-    int ptrindex = 0;
-    while(delimptr != NULL){
-        ptrindex = (int)(delimptr - input);
-        char* token = malloc(ptrindex * sizeof(char));
-        memcpy(token, input + beginindex, ptrindex - beginindex);
-        printf("substring from %d to %d: %s\n", beginindex, ptrindex, token);
-        array[i++] = token;
-        printf("token: %s\n", token);
-        delimptr = strchr(delimptr+1, delim);
-        beginindex = ptrindex+1;
+    while(str[i] == ' '){
+        str[i]++;
     }
-    return array;
+    return str;
+}
+
+char **split(char* input, int delim){
+    char** cmd_array = malloc(bufsize * sizeof(char*));
+    char* cmd = get_next_cmd(input);
+    char* delimptr = strchr(input, delim);
+    int i = 0;
+    while(delimptr != NULL){
+        delimptr[0] = '\0';
+        cmd_array[i++] = cmd;
+        printf("token: %s\n", cmd);
+        cmd = get_next_cmd(delimptr+1);
+        delimptr = strchr(cmd, delim);
+    }
+    if(!isspace(cmd[0])){
+        cmd_array[i] = cmd;
+        ++i;
+    }
+    cmd_array[i] = NULL;
+    return cmd_array;
 }
