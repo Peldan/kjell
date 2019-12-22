@@ -13,13 +13,13 @@
 int process_status;
 int bufsize = BUFSIZE;
 
-const char* SPACE = " ";
-const char* COLON = ":";
+int SPACE = ' ';
+int COLON = ':';
 char** path_args;
 
 void print_prompt();
 void execute_args(char** args);
-char** split(char* input, const char* delim);
+char** split(char* input, int delim);
 char* get_user_input(void);
 int main();
 void parse_path_args();
@@ -32,6 +32,7 @@ int main() {
         print_prompt();
         line = get_user_input();
         args = split(line, SPACE);
+        printf("Received %s\n", args[0]);
         pid_t pid = fork();
         if(pid == 0 && args[0]){
             printf("Running exec on %s : %s\n", args[0], *args);
@@ -82,16 +83,28 @@ char *get_user_input(void){
     }
 }
 
-char **split(char* input, const char* delim){
+char **split(char* input, int delim){
     char **array = malloc(bufsize * sizeof(char*));
-    char *word;
-    char *buf;
-    word = strtok_r(input, delim, &buf);
-    int i = 0;
-    while(word != NULL){
-        array[i++] = word;
-        word = strtok_r(NULL, delim, &buf);
+    input[strlen(input)] = ' ';
+    char *delimptr = strchr(input, delim);
+    if(!delimptr){
+        array[0] = input;
+        array[1] = NULL;
+        free(delimptr);
+        return array;
     }
-    array[i] = (char*)NULL;
+    int i = 0;
+    int beginindex = 0;
+    int ptrindex = 0;
+    while(delimptr != NULL){
+        ptrindex = (int)(delimptr - input);
+        char* token = malloc(ptrindex * sizeof(char));
+        memcpy(token, input + beginindex, ptrindex - beginindex);
+        printf("substring from %d to %d: %s\n", beginindex, ptrindex, token);
+        array[i++] = token;
+        printf("token: %s\n", token);
+        delimptr = strchr(delimptr+1, delim);
+        beginindex = ptrindex+1;
+    }
     return array;
 }
