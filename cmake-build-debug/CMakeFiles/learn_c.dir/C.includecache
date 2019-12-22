@@ -13,12 +13,12 @@ string.h
 -
 stdlib.h
 -
-stdio.h
--
 sys/types.h
 -
 unistd.h
 -
 wait.h
+-
+errno.h
 -
 
