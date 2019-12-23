@@ -29,7 +29,8 @@ char** path_args;
 
 void print_prompt();
 void execute_args(char** args);
-char** split(char* input, const int delim);
+void handle_special_characters(char* input);
+char** split(char* input, int delim);
 char* get_user_input(void);
 int main();
 void parse_path_args();
@@ -41,14 +42,8 @@ int main() {
     do {
         print_prompt();
         line = get_user_input();
-        args = split(line, SPACE);
-        pid_t pid = fork();
-        if(pid == 0 && args[0]){
-            execute_args(args);
-        }
-        waitpid(pid, &process_status, 0);
+        handle_special_characters(line);
         free(line);
-        free(args);
     } while (!feof(stdin));
     free(path_args);
     exit(0);
@@ -70,13 +65,17 @@ void print_prompt(){
 }
 
 void execute_args(char** args){
-    printf("Tog emot %s för exekvering\n", args[0]);
-    if(strcmp(args[0], "cd") == 0){
-        chdir(args[1]);
-    } else {
-        execvp(args[0], args);
-        printf("Oh dear, something went wrong! %s\n", strerror(errno));
+    pid_t pid = fork();
+    if(pid == 0 && args[0]){
+        printf("Tog emot %s för exekvering\n", args[0]);
+        if(strcmp(args[0], "cd") == 0){
+            chdir(args[1]);
+        } else {
+            execvp(args[0], args);
+            printf("Oh dear, something went wrong! %s\n", strerror(errno));
+        }
     }
+    waitpid(pid, &process_status, 0);
 }
 
 char *get_user_input(void){
@@ -92,12 +91,42 @@ char *get_user_input(void){
     }
 }
 
+void remove_trailing_whitespace(char* str){
+    unsigned long i = strlen(str) - 1;
+    while(str[i] == ' '){
+        str[i] = '\0';
+        i++;
+    }
+}
+
 char *get_next_cmd(char* str){
     int i = 0;
     while(str[i] == ' '){
-        str[i]++;
+        i++;
     }
-    return str;
+    remove_trailing_whitespace(str);
+    return &str[i];
+}
+
+void handle_special_characters(char* input){
+    char* delimptr = strchr(input, SEMICOLON);
+    char* cmd = get_next_cmd(input);
+    if(delimptr == NULL){
+        execute_args(split(input, SPACE));
+        return;
+    }
+    input[strlen(input)] = ';'; //appends a delim to last index so that all commands are executed
+    while(delimptr != NULL){
+        delimptr[0] = '\0'; //removes the delimiter character
+        char* before_delim = malloc(strlen(cmd)*sizeof(char));
+        printf("delim index: %lu\n", delimptr - input);
+        strncpy(before_delim, cmd, (delimptr - input));
+        printf("before_delim: %s\n", before_delim);
+        execute_args(split(before_delim, SPACE));
+        cmd = get_next_cmd(delimptr+1);
+        delimptr = strchr(cmd, SEMICOLON);
+        free(before_delim);
+    }
 }
 
 char **split(char* input, int delim){
@@ -108,7 +137,6 @@ char **split(char* input, int delim){
     while(delimptr != NULL){
         delimptr[0] = '\0';
         cmd_array[i++] = cmd;
-        printf("token: %s\n", cmd);
         cmd = get_next_cmd(delimptr+1);
         delimptr = strchr(cmd, delim);
     }
