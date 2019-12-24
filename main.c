@@ -11,31 +11,40 @@
 
 #define true 1
 #define false 0
+#define bool int
 #define BUFSIZE 1024
+#define CMD_MAX 10
 
 int process_status;
 int bufsize = BUFSIZE;
 
-const char* SPACE = " ";
-const char* COLON = ":";
-const char* SEMICOLON = ";";
-const char* PIPE = "|";
-const char* AND = "&&";
+const char *SPACE = " ";
+const char *COLON = ":";
+const char *SEMICOLON = ";";
+const char *PIPE = "|";
+const char *AND = "&&";
 
-char** path_args;
+char **path_args;
 
-void handle_command(char* line);
+void handle_command(char *line);
+
 void print_prompt();
-void execute_args(char** args);
-void handle_special_characters(char* input, const char* delim);
-char** split(char* input, const char* delim);
-char* get_user_input(void);
+
+void execute_args(char **args[], const char *delim);
+
+void handle_special_characters(char *input);
+
+char **split(char *input, const char *delim);
+
+char *get_user_input(void);
+
 int main();
+
 void parse_path_args();
 
 int main() {
     parse_path_args();
-    char* line;
+    char *line;
     do {
         print_prompt();
         line = get_user_input();
@@ -46,59 +55,60 @@ int main() {
     exit(0);
 }
 
-void handle_command(char* line){
-    if(strstr(line, SEMICOLON)){
-        printf("SEMICOLON\n");
-        handle_special_characters(line, SEMICOLON);
-    }
-    if(strstr(line, PIPE)){
-        printf("PIPE\n");
-        handle_special_characters(line, PIPE);
-    }
-    if(strstr(line, AND)){
-        printf("AND\n");
-        handle_special_characters(line, AND);
-    }
-    else if(strstr(line, SPACE)){
-        printf("SPACE\n");
-        handle_special_characters(line, SPACE);
-    }
+void handle_command(char *line) {
+    handle_special_characters(line);
 }
 
-void parse_path_args(){
-    char* env;
-    char* path = getenv("PATH");
+void parse_path_args() {
+    char *env;
+    char *path = getenv("PATH");
     env = malloc(strlen(path) + 1);
     strcpy(env, getenv("PATH"));
     path_args = split(env, COLON);
 }
 
-void print_prompt(){
+void print_prompt() {
     char tmpbuf[BUFSIZE];
     char *cwd = getcwd(tmpbuf, sizeof(tmpbuf));
     printf("%s $ ", cwd);
     fflush(stdout);
 }
 
-void execute_args(char** args){
+void execute_args(char **args[], const char *delim) {
     pid_t pid = fork();
-    if(pid == 0 && args[0]){
-        if(strcmp(args[0], "cd") == 0){
-            chdir(args[1]);
-        } else {
-            execvp(args[0], args);
-            printf("Oh dear, something went wrong! %s\n", strerror(errno));
+    if (pid == 0) {
+        for (char **c = *args; c; c = *++args) {
+            if (strcmp(c[0], "cd") == 0) {
+                chdir(c[1]);
+            } else {
+                printf("received %s --- %s for exec\n",c[0], *c);
+                if (delim == PIPE) {
+                    printf("\n\nRUNNING PIPE\n\n");
+                    printf("Oh dear, something went wrong! %s\n", strerror(errno));
+                } else if (delim == AND) {
+                    printf("\n\nRUNNING &&\n\n");
+                    if (execvp(c[0], c) == -1) {
+                        printf("fel: %s\n", strerror(errno));
+                        break;
+                    }
+                    execvp(c[0], c);
+                    printf("ran %s - %s\n", c[0], *c);
+                } else {
+                    execvp(c[0], c);
+                }
+                printf("Oh dear, something went wrong! %s\n", strerror(errno));
+            }
         }
     }
     waitpid(pid, &process_status, 0);
 }
 
-char *get_user_input(void){
-    char* input = malloc(sizeof(char) * 64);
+char *get_user_input(void) {
+    char *input = malloc(sizeof(char) * 64);
     int i = 0;
-    while(true){
-        char c = (char)getchar();
-        if(c == EOF || c == '\n'){
+    while (true) {
+        char c = (char) getchar();
+        if (c == EOF || c == '\n') {
             return input;
         }
         input[i] = c;
@@ -106,56 +116,66 @@ char *get_user_input(void){
     }
 }
 
-void remove_trailing_whitespace(char* str){
+void remove_trailing_whitespace(char *str) {
     unsigned long i = strlen(str) - 1;
-    while(str[i] == ' '){
+    while (str[i] == ' ') {
         str[i] = '\0';
         i++;
     }
 }
 
-char *get_next_cmd(char* str){
+char *get_next_cmd(char *str) {
     int i = 0;
-    while(str[i] == ' '){
+    while (str[i] == ' ') {
         i++;
     }
     remove_trailing_whitespace(str);
     return &str[i];
 }
 
-void handle_special_characters(char* input, const char* delim){
-    char* delimptr = strstr(input, delim);
-    char* cmd = get_next_cmd(input);
-    if(delimptr == NULL){
-        execute_args(split(cmd, SPACE));
-        return;
+void handle_special_characters(char *input) {
+    const char *special_characters[] = {SEMICOLON, PIPE, AND};
+    size_t len = sizeof(special_characters) / sizeof(special_characters[0]);
+    for (int i = 0; i < len; i++) {
+        char **to_exec[CMD_MAX];
+        char *delimptr = strstr(input, special_characters[i]);
+        char *cmd = get_next_cmd(input);
+        if (delimptr == NULL) {
+            if(i == len - 1){
+                to_exec[0] = split(cmd, SPACE);
+                printf("splitted: %s\n", *to_exec[0]);
+                execute_args(to_exec, SPACE);
+            }
+            continue;
+        }
+        strcat(input, special_characters[i]);
+        while (delimptr != NULL) {
+            delimptr[0] = '\0'; //removes the delimiter character
+            if (special_characters[i] == AND) {
+                delimptr[1] = '\0';
+            }
+            char *before_delim = malloc(strlen(cmd) * sizeof(char));
+            strncpy(before_delim, cmd, (delimptr - input));
+            to_exec[i] = split(before_delim, SPACE);
+            cmd = get_next_cmd(delimptr + 1);
+            delimptr = strstr(cmd, SEMICOLON);
+        }
+        execute_args(to_exec, special_characters[i]);
     }
-    strcat(input, delim);
-    printf("Adding %s to temp on index %lu\n", delim, strlen(input));
-    while(delimptr != NULL){
-        delimptr[0] = '\0'; //removes the delimiter character
-        char* before_delim = malloc(strlen(cmd)*sizeof(char));
-        strncpy(before_delim, cmd, (delimptr - input));
-        execute_args(split(before_delim, SPACE));
-        cmd = get_next_cmd(delimptr+1);
-        delimptr = strstr(cmd, SEMICOLON);
-        free(before_delim);
-    }
-    printf("remaining cmd: %s\n", cmd);
 }
 
-char **split(char* input, const char* delim){
-    char** cmd_array = malloc(bufsize * sizeof(char*));
-    char* cmd = get_next_cmd(input);
-    char* delimptr = strstr(input, delim);
+char **split(char *input, const char *delim) {
+    char **cmd_array = malloc(bufsize * sizeof(char *));
+    char *cmd = get_next_cmd(input);
+    char *delimptr = strstr(input, delim);
     int i = 0;
-    while(delimptr != NULL){
+    while (delimptr != NULL) {
         delimptr[0] = '\0';
         cmd_array[i++] = cmd;
-        cmd = get_next_cmd(delimptr+1);
+        cmd = get_next_cmd(delimptr + 1);
         delimptr = strstr(cmd, delim);
     }
-    if(!isspace(cmd[0])){
+    if (!isspace(cmd[0])) {
         cmd_array[i] = cmd;
         ++i;
     }
