@@ -81,7 +81,7 @@ char *get_user_input(void){
     }
 }
 
-char **split(char* input, const char* delim){
+char **strsplit(char* input, const char* delim){
     char **array = malloc(bufsize * sizeof(char));
     char *word;
     word = strtok(input, delim);
