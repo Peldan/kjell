@@ -153,8 +153,12 @@ void execute_pipe(char **from, char **to) {
 void execute_single_arg(struct cmd command) {
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(*command.args, command.args);
-        printf("Oh dear, something went wrong! %s\n", strerror(errno));
+        if(strcmp(*command.args, "cd") == 0){
+            chdir(command.args[1]);
+        } else {
+            execvp(*command.args, command.args);
+            printf("Oh dear, something went wrong! %s\n", strerror(errno));
+        }
     }
     waitpid(pid, &process_status, 0);
 }
