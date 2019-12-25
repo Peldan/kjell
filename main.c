@@ -12,6 +12,13 @@
 #define bool int
 #define BUFSIZE 1024
 #define CMD_MAX 10
+#define SUCCESS 0
+
+//STRUCT
+
+struct cmd {
+    char **args;
+};
 
 //VARIABLES
 int process_status;
@@ -30,7 +37,9 @@ void handle_command(char *line);
 
 void print_prompt();
 
-void execute_args(char **args[], const char *delim);
+void execute_args(struct cmd commands[], const char *delim, int cmd_amount);
+
+void execute_pipe(char **from, char **to);
 
 void handle_special_characters(char *input);
 
@@ -41,6 +50,8 @@ char *get_user_input(void);
 int main();
 
 void parse_path_args();
+
+void execute_chained(const struct cmd *commands, const int cmd_amount);
 
 int main() {
     parse_path_args();
@@ -79,29 +90,72 @@ void print_prompt() {
     fflush(stdout);
 }
 
-void execute_args(char **args[], const char *delim) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        for (char **c = *args; c; c = *++args) {
-            if (strcmp(c[0], "cd") == 0) {
-                chdir(c[1]);
-            } else {
-                if (delim == PIPE) {
-                    printf("Oh dear, something went wrong! %s\n", strerror(errno));
-                } else if (delim == AND) {
-                    if (execvp(c[0], c) == -1) {
-                        printf("fel: %s\n", strerror(errno));
-                        break;
-                    }
-                    execvp(c[0], c);
-                } else {
-                    execvp(c[0], c);
-                }
+void execute_args(struct cmd commands[CMD_MAX], const char *delim, const int cmd_amount) {
+    if (delim == SEMICOLON) {
+        execute_chained(commands, cmd_amount);
+    }
+    else if (delim == PIPE) {
+        execute_pipe(commands[0].args, commands[1].args);
+    }
+    else if (delim == AND) {
+
+    }
+}
+
+void execute_chained(const struct cmd *commands, const int cmd_amount) {
+    for (int i = 0; i < cmd_amount; i++) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            char **cmd_arr = commands[i].args;
+            while (*cmd_arr != NULL) {
+                execvp(*cmd_arr, cmd_arr);
                 printf("Oh dear, something went wrong! %s\n", strerror(errno));
+                cmd_arr++;
             }
         }
+        waitpid(pid, &process_status, 0);
+        printf("\n");
     }
-    printf("\n");
+}
+
+void execute_pipe(char **from, char **to) {
+    int pipefd[2];
+    pid_t child;
+    if(pipe(pipefd) != 0){
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+    child = fork();
+    if(child == -1){
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+    if(child == SUCCESS){
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[STDOUT_FILENO]);
+        execvp(*from, from);
+        waitpid(child, &process_status, 0);
+    } else {
+        child = fork();
+        if(child == 0){
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[STDIN_FILENO]);
+            execvp(*to, to);
+        } else {
+            close(pipefd[STDIN_FILENO]);
+            close(pipefd[STDOUT_FILENO]);
+            waitpid(child, &process_status, 0);
+        }
+    }
+}
+
+void execute_single_arg(struct cmd command) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        execvp(*command.args, command.args);
+        printf("Oh dear, something went wrong! %s\n", strerror(errno));
+    }
     waitpid(pid, &process_status, 0);
 }
 
@@ -139,36 +193,32 @@ char *skip_whitespace_cmd(char *str) {
 void handle_special_characters(char *input) {
     const char *special_characters[] = {SEMICOLON, PIPE, AND};
     size_t len = sizeof(special_characters) / sizeof(special_characters[0]);
+
+    if (strstr(input, AND) == NULL && strstr(input, SEMICOLON) == NULL && strstr(input, PIPE) == NULL) {
+        struct cmd command = {strsplit(input, SPACE)};
+        execute_single_arg(command);
+        return;
+    }
+
     for (int i = 0; i < len; i++) {
-        char **to_exec[CMD_MAX];
+        int cmdnum = 0;
+        struct cmd commands[CMD_MAX];
         char *delimptr = strstr(input, special_characters[i]);
         char *cmd = skip_whitespace_cmd(input);
-        if (delimptr == NULL) {
-            if (i == len - 1) {
-                char **split_cmd = strsplit(cmd, SPACE);
-                to_exec[0] = split_cmd;
-                execute_args(to_exec, SPACE);
-                free(split_cmd);
-                split_cmd = NULL;
-            }
-            continue;
-        }
         strcat(input, special_characters[i]);
         while (delimptr != NULL) {
             delimptr[0] = '\0'; //removes the delimiter character
             if (special_characters[i] == AND) {
                 delimptr[1] = '\0';
             }
-            char *before_delim = calloc(1, strlen(cmd) * sizeof(char));
+            char *before_delim = calloc(1, strlen(input) * sizeof(char));
             strncpy(before_delim, cmd, (delimptr - input));
             char **split_cmd = strsplit(before_delim, SPACE);
-            to_exec[i] = split_cmd;
+            commands[cmdnum++].args = split_cmd;
             cmd = skip_whitespace_cmd(delimptr + 1);
             delimptr = strstr(cmd, SEMICOLON);
-            free(split_cmd);
-            split_cmd = NULL;
         }
-        execute_args(to_exec, special_characters[i]);
+        execute_args(commands, special_characters[i], cmdnum);
     }
 }
 
