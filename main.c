@@ -4,9 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
-
 #include <ctype.h>
-
 #include <sys/wait.h>
 
 #define true 1
@@ -15,6 +13,7 @@
 #define BUFSIZE 1024
 #define CMD_MAX 10
 
+//VARIABLES
 int process_status;
 int bufsize = BUFSIZE;
 
@@ -26,6 +25,7 @@ const char *AND = "&&";
 
 char **path_args;
 
+//FUNC PROTOTYPES
 void handle_command(char *line);
 
 void print_prompt();
@@ -48,7 +48,7 @@ int main() {
     do {
         print_prompt();
         line = get_user_input();
-        if(strlen(line) > 0){
+        if (strlen(line) > 0) {
             handle_command(line);
         }
         free(line);
@@ -65,7 +65,7 @@ void handle_command(char *line) {
 void parse_path_args() {
     char *env;
     char *path = getenv("PATH");
-    env = malloc(strlen(path) + 1);
+    env = calloc(1, strlen(path) + 1);
     strcpy(env, path);
     path_args = split(env, COLON);
     free(env);
@@ -86,7 +86,7 @@ void execute_args(char **args[], const char *delim) {
             if (strcmp(c[0], "cd") == 0) {
                 chdir(c[1]);
             } else {
-                printf("received %s --- %s for exec\n",c[0], *c);
+                printf("received %s --- %s for exec\n", c[0], *c);
                 if (delim == PIPE) {
                     printf("\n\nRUNNING PIPE\n\n");
                     printf("Oh dear, something went wrong! %s\n", strerror(errno));
@@ -109,7 +109,7 @@ void execute_args(char **args[], const char *delim) {
 }
 
 char *get_user_input(void) {
-    char *input = calloc(sizeof(char) * 64, sizeof(char));
+    char *input = calloc(1, sizeof(char) * 64);
     int i = 0;
     while (true) {
         char c = (char) getchar();
@@ -147,7 +147,7 @@ void handle_special_characters(char *input) {
         char *delimptr = strstr(input, special_characters[i]);
         char *cmd = get_next_cmd(input);
         if (delimptr == NULL) {
-            if(i == len - 1){
+            if (i == len - 1) {
                 char **split_cmd = split(cmd, SPACE);
                 to_exec[0] = split_cmd;
                 execute_args(to_exec, SPACE);
@@ -162,7 +162,7 @@ void handle_special_characters(char *input) {
             if (special_characters[i] == AND) {
                 delimptr[1] = '\0';
             }
-            char *before_delim = malloc(strlen(cmd) * sizeof(char));
+            char *before_delim = calloc(1, strlen(cmd) * sizeof(char));
             strncpy(before_delim, cmd, (delimptr - input));
             char **split_cmd = split(before_delim, SPACE);
             to_exec[i] = split_cmd;
@@ -176,7 +176,7 @@ void handle_special_characters(char *input) {
 }
 
 char **split(char *input, const char *delim) {
-    char **cmd_array = malloc(bufsize * sizeof(char *));
+    char **cmd_array = calloc(1, bufsize * sizeof(char *));
     char *cmd = get_next_cmd(input);
     char *delimptr = strstr(input, delim);
     int i = 0;
