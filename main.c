@@ -48,10 +48,13 @@ int main() {
     do {
         print_prompt();
         line = get_user_input();
-        handle_command(line);
+        if(strlen(line) > 0){
+            handle_command(line);
+        }
         free(line);
     } while (!feof(stdin));
     free(path_args);
+    free(line);
     exit(0);
 }
 
@@ -63,8 +66,10 @@ void parse_path_args() {
     char *env;
     char *path = getenv("PATH");
     env = malloc(strlen(path) + 1);
-    strcpy(env, getenv("PATH"));
+    strcpy(env, path);
     path_args = split(env, COLON);
+    free(env);
+    env = NULL;
 }
 
 void print_prompt() {
@@ -104,11 +109,12 @@ void execute_args(char **args[], const char *delim) {
 }
 
 char *get_user_input(void) {
-    char *input = malloc(sizeof(char) * 64);
+    char *input = calloc(sizeof(char) * 64, sizeof(char));
     int i = 0;
     while (true) {
         char c = (char) getchar();
         if (c == EOF || c == '\n') {
+            input[i] = '\0';
             return input;
         }
         input[i] = c;
@@ -120,7 +126,7 @@ void remove_trailing_whitespace(char *str) {
     unsigned long i = strlen(str) - 1;
     while (str[i] == ' ') {
         str[i] = '\0';
-        i++;
+        i--;
     }
 }
 
@@ -142,9 +148,11 @@ void handle_special_characters(char *input) {
         char *cmd = get_next_cmd(input);
         if (delimptr == NULL) {
             if(i == len - 1){
-                to_exec[0] = split(cmd, SPACE);
-                printf("splitted: %s\n", *to_exec[0]);
+                char **split_cmd = split(cmd, SPACE);
+                to_exec[0] = split_cmd;
                 execute_args(to_exec, SPACE);
+                free(split_cmd);
+                split_cmd = NULL;
             }
             continue;
         }
@@ -156,9 +164,12 @@ void handle_special_characters(char *input) {
             }
             char *before_delim = malloc(strlen(cmd) * sizeof(char));
             strncpy(before_delim, cmd, (delimptr - input));
-            to_exec[i] = split(before_delim, SPACE);
+            char **split_cmd = split(before_delim, SPACE);
+            to_exec[i] = split_cmd;
             cmd = get_next_cmd(delimptr + 1);
             delimptr = strstr(cmd, SEMICOLON);
+            free(split_cmd);
+            split_cmd = NULL;
         }
         execute_args(to_exec, special_characters[i]);
     }
@@ -175,6 +186,7 @@ char **split(char *input, const char *delim) {
         cmd = get_next_cmd(delimptr + 1);
         delimptr = strstr(cmd, delim);
     }
+    free(delimptr);
     if (!isspace(cmd[0])) {
         cmd_array[i] = cmd;
         ++i;
